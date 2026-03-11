@@ -1,1 +1,1 @@
-// Constants.js
+export const DB_NAME = "Blogger"
