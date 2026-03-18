@@ -7,6 +7,7 @@ import {
 } from "../controllers/comment.controller.js"
 import { authMiddleware } from "../middlewares/auth.middleware.js"
 
+
 const router = express.Router()
 
 router.post("/:postId", authMiddleware, addComment)
