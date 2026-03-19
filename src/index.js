@@ -1,21 +1,35 @@
+// index.js - Backend entry point
+
 import dotenv from "dotenv"
 import connectDB from "./db/db.js"
-import{app} from "./app.js"
+import { app } from "./app.js"
 
+// 1️ Load environment variables from .env file
 dotenv.config({
   path: './.env'
 })
 
-
+// 2️ Connect to MongoDB
 connectDB()
-.then(() => {
-  app.listen(process.env.PORT || 8000, () =>{
-    console.log(`Server is running at port : ${process.env.PORT}`);
+  .then(() => {
+    // 3️ Start the server after DB connection is successful
+    const PORT = process.env.PORT || 8000
+    app.listen(PORT, () => {
+      console.log(`Server is running at port: ${PORT}`)
+    })
   })
-})
-.catch((err) => {
-  console.log("MONGO db connection failed !!!" , err)
-})
+  .catch((err) => {
+    // 4️ Handle DB connection failure
+    console.log("MONGO DB connection failed !!!", err)
+  })
+
+
+
+
+
+
+
+
 
 
 

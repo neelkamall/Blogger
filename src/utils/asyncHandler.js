@@ -1,4 +1,4 @@
-const asyncHandler = (requestHandler) => async (requestAnimationFrame, resizeBy, next) => {
+const asyncHandler = (requestHandler) => async (req, res, next) => {
   try {
     await requestHandler(req, res, next)
   } catch (error) {
