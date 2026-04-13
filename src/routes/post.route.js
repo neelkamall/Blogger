@@ -6,15 +6,15 @@ import {
   deletePost,
   toggleLike
 } from "../controllers/post.controller.js"
-import { authMiddleware } from "../middlewares/auth.middleware.js"
 
+import passport from "passport"
 
 const router = express.Router()
 
-router.post("/", authMiddleware, createPost)
-router.get("/", getPosts)
-router.patch("/:id", authMiddleware, updatePost)
-router.delete("/:id", authMiddleware, deletePost)
-router.post("/like/:id", authMiddleware, toggleLike)
+router.post("/", passport.authenticate("jwt", { session: false }), createPost)
+router.get("/", passport.authenticate("jwt", { session: false }), getPosts)
+router.patch("/:id", passport.authenticate("jwt", { session: false }), updatePost)
+router.delete("/:id", passport.authenticate("jwt", { session: false }), deletePost)
+router.post("/like/:id", passport.authenticate("jwt", { session: false }), toggleLike)
 
 export default router

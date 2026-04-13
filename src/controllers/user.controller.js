@@ -3,38 +3,51 @@ import jwt from "jsonwebtoken"
 import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
+import { registerSchema, loginSchema } from "../validators/user.validator.js"
 
-const registerUser = asyncHandler(async (req, res) => {
-  const { username, email, password } = req.body
-
-  if (!(username || email || password)) {
-    throw new ApiError(400, "All fields required")
+const registerUser = asyncHandler(async (req,res) => {
+  // zod validator
+  const result = registerSchema.safeParse(req.body)
+  if (!result.success) {
+    throw new ApiError(400, result.error.errors[0].message)
   }
+  const {username, email, password} = req.body 
 
-  const existed = await User.findOne({ email })
-  if (existed) throw new ApiError(409, "User already exists")
+  if (!username, !email, !password){
+    throw new ApiError(400, "All fields are required")
+  } 
 
-  const user = await User.create({ username, email, password })
+  const existed = await User.findOne({
+    $or: [{email}, {username}]
+  })
+  if(existed) throw new ApiError (409, "User already existed")
 
+  const user = await User.create({username, email, password})  
+  
   return res.status(201).json(
     new ApiResponse(201, user, "User registered")
   )
 })
 
 const loginUser = asyncHandler(async (req, res) => {
-  const { email, password } = req.body
+  // zod validator
+  const result = loginSchema.safeParse(req.body)
+  if (!result.success) {
+    throw new ApiError(400, result.error.errors[0].message)
+  }
+  const {email, password} = req.body
 
-  const user = await User.findOne({ email })
-  if (!user) throw new ApiError(404, "User not found")
+  const user = await User.findOne(email)
+  if(!user) throw new ApiError (404, "User already existed")
 
-  const isMatch = await user.isPasswordCorrect(password)
-  if (!isMatch) throw new ApiError(401, "Invalid credentials")
-
+  const isMatch = await User.isPasswordCorrect(password)
+  if (!isMatch) throw new ApiError  (401, "Invalid Credential")  
+  
   const accessToken = user.generateAccessToken()
   const refreshToken = user.generateRefreshToken()
-
+  
   user.refreshToken = refreshToken
-  await user.save({ validateBeforeSave: false })
+  await user.save({validateBeforeSave: false})
 
   return res.status(200).json(
     new ApiResponse(200, { accessToken, refreshToken }, "Login success")
@@ -54,8 +67,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET)
   const user = await User.findById(decoded._id)
 
-  if (!user || user.refreshToken !== token) {
-    throw new ApiError(401, "Invalid token")
+  if(!user || user.refreshToken !== token){
+    throw new ApiError (401, "Invalid Token")
   }
 
   const newAccessToken = user.generateAccessToken()
@@ -66,15 +79,15 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 })
 
 const changeCurrentPassword = asyncHandler(async (req, res) => {
-  const { oldPassword, newPassword } = req.body
+  const {oldPassword, newPassword} = req.body
 
   const user = await User.findById(req.user._id)
 
-  const isMatch = await user.isPasswordCorrect(oldPassword)
-  if (!isMatch) throw new ApiError(400, "Wrong password")
+  const isMatch = await User.isPasswordCorrect(oldPassword)
+  if(!isMatch) throw new ApiError(400, "Wrong Password")
 
   user.password = newPassword
-  await user.save()
+  await user.save()  
 
   return res.json(new ApiResponse(200, {}, "Password changed"))
 })

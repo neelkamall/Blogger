@@ -32,4 +32,4 @@ const commentSchema = new Schema (
 
 
 
-export const User = mongoose.model("Comment", commentSchema)
+export const Comment = mongoose.model("Comment", commentSchema)

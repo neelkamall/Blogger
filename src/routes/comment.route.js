@@ -5,14 +5,13 @@ import {
   getCommentsByPost,
   deleteComment
 } from "../controllers/comment.controller.js"
-import { authMiddleware } from "../middlewares/auth.middleware.js"
-
+import passport from "passport"
 
 const router = express.Router()
 
-router.post("/:postId", authMiddleware, addComment)
-router.post("/:postId/:commentId", authMiddleware, replyComment)
-router.get("/:postId", getCommentsByPost)
-router.delete("/:id", authMiddleware, deleteComment)
+router.post("/:postId", passport.authenticate("jwt", { session: false }), addComment)
+router.post("/:postId/:commentId", passport.authenticate("jwt", { session: false }), replyComment)
+router.get("/:postId", passport.authenticate("jwt", { session: false }), getCommentsByPost)
+router.delete("/:id", passport.authenticate("jwt", { session: false }), deleteComment)
 
 export default router
