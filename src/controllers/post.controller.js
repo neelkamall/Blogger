@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import { ApiError } from "../utils/ApiError.js"
 import { Comment } from "../models/comment.model.js"
 import { createPostSchema } from "../validators/post.validator.js"
+import { v2 as cloudinary} from "cloudinary"
 
 const createPost = asyncHandler(async (req, res) => {
   // zod validator
@@ -14,10 +15,24 @@ const createPost = asyncHandler(async (req, res) => {
 
   const {title, content} = req.body
 
+  // NEW CLOUDINARY
+  let imageUrl = ""
+  let image_public_id = ""
+
+  if (req.file) {
+    const result = await cloudinary.uploader.upload(req.file.path)
+
+    imageUrl = result.secure_url
+    image_public_id = result.public_id
+  }
+
   const post = await Post.create({
     title,
     content,
-    owner : req.body._id
+    owner: req.user._id,        
+    image: imageUrl,            
+    image_public_id: image_public_id 
+  
   })
 
   return res.status(201).json(
@@ -141,7 +156,7 @@ const deletePost = asyncHandler(async (req, res) => {
   const post = await Post.findbyId(req.params._id)
   if(!post) throw new ApiError(403, "Post not found")
 
-  if(post.owner._id.toString() !== req.owner._id.toString()){
+  if(post.owner._id.toString() !== req.user._id.toString()){
     throw new ApiError(403, "Not Allowed")
   }
 
@@ -159,7 +174,7 @@ const toggleLike = asyncHandler(async (req, res) => {
   if(post.likes.includes(userId)){
     post.likes.pull(userId)
   }else{
-    post.likes.post(userId)
+    post.likes.push(userId)
   }
 
   await post.save()

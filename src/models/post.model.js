@@ -1,27 +1,44 @@
 import mongoose from "mongoose";
 
-const userSchema = new Schema(
+const { Schema } = mongoose;
+
+const postSchema = new Schema(
   {
     title: {
       type: String,
-      required : true
+      required: true
     },
     content: {
-      type : String,
-      required : true
+      type: String,
+      required: true
     },
     owner: {
       type: Schema.Types.ObjectId,
-      ref : "User",
+      ref: "User",
       required: true
     },
-    Likes : {
-      type: Schema.Types.ObjectId,
-      ref : "User",
-      default : []
+
+    // FIXED Likes (array)
+    likes: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User"
+      }
+    ],
+
+    // NEW (Cloudinary)
+    image: {
+      type: String
+    },
+    image_public_id: {
+      type: String
     }
-  }
-)
+
+  },
+  { timestamps: true }
+);
+
+
 
 
 

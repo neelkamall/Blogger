@@ -25,6 +25,12 @@ const userSchema = new Schema (
     },
     refreshToken : {
       type : String,
+    },
+    avatar: {
+      type: String
+    },
+    avatar_public_id: {
+      type: String
     }
   },
   {

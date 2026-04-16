@@ -7,10 +7,14 @@ import {
   changeCurrentPassword
 } from "../controllers/user.controller.js"
 import passport from "passport"
+import multer from "multer"                  // NEW
 
 const router = express.Router()
 
-router.post("/register", registerUser)
+const upload = multer({ dest: "public/temp" }) // NEW
+
+router.post("/register", upload.single("avatar"), registerUser) // UPDATED
+
 router.post("/login", loginUser)
 router.post("/logout", passport.authenticate("jwt", { session: false }), logoutUser)
 router.post("/refresh-token", refreshAccessToken)

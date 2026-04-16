@@ -4,6 +4,7 @@ import { asyncHandler } from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { registerSchema, loginSchema } from "../validators/user.validator.js"
+import { v2 as cloudinary } from "cloudinary"
 
 const registerUser = asyncHandler(async (req,res) => {
   // zod validator
@@ -13,7 +14,7 @@ const registerUser = asyncHandler(async (req,res) => {
   }
   const {username, email, password} = req.body 
 
-  if (!username, !email, !password){
+  if (!username || !email || !password){
     throw new ApiError(400, "All fields are required")
   } 
 
@@ -22,7 +23,25 @@ const registerUser = asyncHandler(async (req,res) => {
   })
   if(existed) throw new ApiError (409, "User already existed")
 
-  const user = await User.create({username, email, password})  
+  // NEW CLOUDINARY LOGIC START
+  let avatarUrl = ""
+  let avatar_public_id = ""
+
+  if (req.file) {
+    const result = await cloudinary.uploader.upload(req.file.path)
+
+    avatarUrl = result.secure_url
+    avatar_public_id = result.public_id
+  }
+  // NEW CLOUDINARY LOGIC END
+
+  const user = await User.create({
+    username,
+    email,
+    password,
+    avatar: avatarUrl,                 
+    avatar_public_id: avatar_public_id 
+  })   
   
   return res.status(201).json(
     new ApiResponse(201, user, "User registered")
@@ -37,8 +56,8 @@ const loginUser = asyncHandler(async (req, res) => {
   }
   const {email, password} = req.body
 
-  const user = await User.findOne(email)
-  if(!user) throw new ApiError (404, "User already existed")
+  const user = await User.findOne({email})
+  if(!user) throw new ApiError (404, "User not found")
 
   const isMatch = await User.isPasswordCorrect(password)
   if (!isMatch) throw new ApiError  (401, "Invalid Credential")  
